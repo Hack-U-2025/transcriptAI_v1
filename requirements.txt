@@ -1,0 +1,3 @@
+pyaudio
+faster-whisper
+numpy

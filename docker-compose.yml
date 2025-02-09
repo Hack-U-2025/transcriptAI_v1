@@ -1,0 +1,14 @@
+version: '3'
+services:
+  transcription:
+    build: .
+    volumes:
+      - .:/app
+      - /tmp/pulse:/tmp/pulse
+    devices:
+      - /dev/snd:/dev/snd
+    environment:
+      - PULSE_SERVER=unix:/tmp/pulse/native
+    network_mode: host
+    # M1 Macを使用している場合、以下の行のコメントを解除してください
+    platform: linux/amd64
