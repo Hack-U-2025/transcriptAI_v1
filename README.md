@@ -105,12 +105,59 @@ Flask-SocketIOのWebSocketイベントが正しく動作するか確認します
 
 ---
 
+### ポート番号の変更
+
+デフォルトのポート番号は5000ですが、環境変数を使用して変更できます：
+
+1. Windowsの場合：
+`set PORT=8080`
+`python app.py`
+
+2. macOS/Linuxの場合：
+`PORT=8080 python app.py`
+
+これにより、指定したポート番号（この例では8080）でサーバーが起動します。
+
 ## **注意事項**
 
 - このシステムはCPUで動作するよう設定されています。GPU環境がある場合は、`app.py`内のモデル初期化部分で`device="cuda"`に変更してください。
 - Unityフロントエンドとの通信にはWebSocketプロトコルを使用しています。ネットワーク設定が正しいことを確認してください。
 
 ---
+
+### トラブルシューティング
+
+#### `ModuleNotFoundError: No module named 'symbol'`エラーが発生する場合
+
+このエラーが発生した場合、以下の手順を試してください：
+
+1. 仮想環境を再作成します：
+`deactivate` # 既存の仮想環境を無効化
+`rm -rf venv` # 既存の仮想環境を削除
+`python -m venv venv` # 新しい仮想環境を作成
+`source venv/Scripts/activate` # 新しい仮想環境を有効化（Windowsの場合）
+
+2. 必要なパッケージを再インストールします：
+`pip install -r requirements.txt`
+
+3. それでもエラーが解決しない場合は、Pythonを再インストールしてください。
+
+### 仮想環境の共有（非推奨）
+
+仮想環境を直接共有することは推奨されませんが、どうしても必要な場合は以下の手順で行えます：
+
+1. 仮想環境をアーカイブします：
+`tar -czvf venv.tar.gz venv`
+
+2. アーカイブファイル（venv.tar.gz）を共有します。
+
+3. 受け取った側は以下のコマンドで展開します：
+`tar -xzvf venv.tar.gz`
+
+4. 仮想環境を有効化します：
+`source venv/Scripts/activate` # Windowsの場合
+
+注意: この方法は環境の違いによって問題が発生する可能性があります。可能な限り、`requirements.txt`を使用して環境を再現することをお勧めします。
 
 ## **ライセンス**
 

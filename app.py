@@ -1,3 +1,4 @@
+import os  # 環境変数の取得に使用
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from audio_input import AudioInput
@@ -11,6 +12,9 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # WhisperモデルとAudioInputの初期化
 model = WhisperModel("small", device="cpu", compute_type="int8")
 audio_input = AudioInput()
+
+# 環境変数からポート番号を取得（デフォルトは5000）
+port = int(os.environ.get("PORT", 5000))
 
 
 @socketio.on("connect")
@@ -65,4 +69,5 @@ def index():
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    # 環境変数からポート番号を取得してサーバーを実行
+    socketio.run(app, debug=True, port=port)
