@@ -1,3 +1,32 @@
 #下に記述されたファイルがgitの管理から外れるよー
 
-models
+# Python関連
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.log
+
+# 仮想環境
+venv/
+
+# エディタ/IDE関連
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# テストキャッシュ
+.pytest_cache/
+
+# カバレッジレポート
+.coverage
+htmlcov/
+
+# ビルド関連
+build/
+dist/
+*.egg-info/
+
+# 機密情報や環境設定ファイル（例: APIキーなど）
+.env

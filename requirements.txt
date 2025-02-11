@@ -1,3 +1,4 @@
-pyaudio
 faster-whisper
-numpy
+flask
+pyaudio
+websockets
