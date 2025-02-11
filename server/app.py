@@ -13,8 +13,11 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
 
-
 # WebSocketサーバーの設定
+HOST = "localhost"
+PORT = 8765
+
+
 async def transcribe(websocket, path):
     p = pyaudio.PyAudio()
     stream = p.open(
@@ -40,7 +43,7 @@ async def transcribe(websocket, path):
         p.terminate()
 
 
-start_server = websockets.serve(transcribe, "localhost", 8765)
+start_server = websockets.serve(transcribe, HOST, PORT)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
