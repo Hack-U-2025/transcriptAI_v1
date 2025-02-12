@@ -1,45 +1,59 @@
 import asyncio
-import websockets
-import pyaudio
-import numpy as np
-from faster_whisper import WhisperModel
+import json
+from websockets import serve
+from audio_utils import create_audio_stream
+from whisper_utils import WhisperModelWrapper
+from vad_utils import VadWrapper
 
-# Whisperモデルのロード
-model = WhisperModel("base", device="cpu")
+# 設定ファイル読み込み
+with open("config.json", "r") as f:
+    config = json.load(f)
 
-# マイク入力の設定
-CHUNK = 1024
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 16000
+HOST = config["host"]
+PORT = config["port"]
 
 
-async def transcribe_and_send(websocket, path):
-    p = pyaudio.PyAudio()
-    stream = p.open(
-        format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
-    )
+class RealTimeTranscriptionServer:
+    def __init__(self):
+        self.vad = VadWrapper()
+        self.whisper = WhisperModelWrapper()
+        self.audio_queue = asyncio.Queue()
 
-    print("マイク入力開始")
-
-    try:
+    async def transcribe_audio(self, websocket):
         while True:
-            data = stream.read(CHUNK, exception_on_overflow=False)
-            audio_data = (
-                np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
-            )
-            segments, _ = model.transcribe(audio_data, beam_size=5)
+            audio_data = await self.audio_queue.get()
+            segments = self.whisper.transcribe(audio_data)
             for segment in segments:
                 await websocket.send(segment.text)
-    except websockets.ConnectionClosedError:
-        print("クライアントとの接続が閉じられました")
-    finally:
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
+
+    def process_audio(self, in_data, frame_count, time_info, status):
+        if self.vad.is_speech(in_data):
+            audio_data = self.vad.append_audio(in_data)
+            if audio_data is not None:
+                asyncio.run_coroutine_threadsafe(
+                    self.audio_queue.put(audio_data), asyncio.get_event_loop()
+                )
+        return (in_data, pyaudio.paContinue)
+
+    async def handler(self, websocket, path):
+        print("クライアントが接続されました")
+        stream = create_audio_stream(self.process_audio)
+        stream.start_stream()
+        try:
+            await self.transcribe_audio(websocket)
+        except Exception as e:
+            print(f"エラー: {e}")
+        finally:
+            stream.stop_stream()
+            stream.close()
 
 
-start_server = websockets.serve(transcribe_and_send, "localhost", 8000)
+# サーバー起動
+async def main():
+    server = RealTimeTranscriptionServer()
+    async with serve(server.handler, HOST, PORT):
+        print(f"サーバーが起動しました: ws://{HOST}:{PORT}")
+        await asyncio.Future()  # サーバーを停止しないため
 
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+
+asyncio.run(main())
